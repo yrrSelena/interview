@@ -160,6 +160,18 @@ git commit -m "===message===="
 git push origin master
 ```
 
+3. 获取远程主机的最新版
+
+```bash
+#fetch：将远程主机的最新内容拉到本地，不进行合并
+git fetch origin master
+
+#pull：将远程主机的master分支最新内容拉下来后与当前本地分支直接合并 fetch+merge
+git pull origin master
+```
+
+
+
 
 
 #### 常见问题
