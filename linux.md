@@ -14,6 +14,65 @@ rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive
 
 
 
+#### 进程通信
+
+##### 共享内存
+
+System V
+
+> https://blog.csdn.net/RayCongLiang/article/details/100027643
+
+```c
+#include <sys/ipc.h>
+#include <sys/shm.h>
+/*1.shmget 创建共享内存
+参数：
+key:段名，可以是自定义的整数，或者用字符串通过ftok() 生成（但每次生成的值可能不一样）
+size:大小
+shmflg:9个权限标志（与创建文件使用的mode模式标志一样）。
+成功返回该内存段的标志码（非负整数），否则返回-1 
+*/
+int shmget(key_t key, int size, int shmflg);  
+
+/*2.shmat 将共享内存段连接到进程地址空间
+参数：
+shmid:共享内存标识码
+shmaddr:指定连接的地址(shmflg=SHM_RND时才可指定)，多数情况设为空指针，由系统自动选择地址
+shmflg:SHM_RND 或 SHM_RDONLY（映射过来的地址只读）
+成功返回指向映射地址的第一个字节的指针，失败返回-1
+*/
+void *shmat(int shmid, void *shmaddr, int shmflg);
+
+/*3.shmdt 解除映射，将当前进程与共享内存段脱离
+成功返回0，否则-1
+*/
+int shmdt(const void *shmaddr);
+
+/*4.shmctl 控制共享内存
+参数：
+shmid:共享内存标志码
+cmd:IPC_STAT:得到共享内存的状态，把共享内存的shmid_ds结构体复制到buf里
+	IPC_SET：改变共享内存的状态，把buf所指的结构体中的uid,gid,mode,复制到共享内存的shmid_ds结构体内
+	IPC_RMID:删除共享内存段
+buf:指向一个保存共享内存的模式状态和访问权限的数据结构
+成功返回0，否则-1
+*/
+int shmctl(int shmid, int cmd, struct shmid_ds *buf)
+```
+
+
+
+```shell
+~$ ipcs #显示进程通信消息（共享内存、消息队列、信号量）
+~$ free #显示系统内存的使用情况，包括物理内存、交换内存(swap)和内核缓冲区内存。
+```
+
+![image-20200819174527606](linux.assets/image-20200819174527606.png)
+
+
+
+
+
 #### GCC 命令
 
 ```shell
@@ -45,6 +104,24 @@ gcc main.c -o main
 ~$ source .bashrc
 ~$ ulimit -c #ulimit生成的core文件大小不受限制
 ```
+
+
+
+```shell
+#gcc编译成可执行文件后，运行该文件
+~$ gcc -o main main.c #一般会加-g用来添加调试信息
+~$./main #出现错误，相应文件夹下会产生core文件
+~$ gdb main core #进入gdb调试，可以看到出错的代码位置及原因
+(gdb) bt #进入gdb后，输入bt查看进程结束的地方
+```
+
+<img src="linux.assets/image-20200818155709092.png" alt="image-20200818155709092" style="zoom:80%;" />
+
+##### 常见错误
+
+段错误
+
+
 
 
 
@@ -140,7 +217,7 @@ Ubuntu下不支持yum命令，应替换为`apt-get install xxx`
 
 ### git
 
-1. 初版
+#### 1. 创建初版
 
 ```bash
 #在要git的文件夹下打开git Bash
@@ -152,7 +229,7 @@ git remote add origin https://github.com/yrrSelena/MedInfoSearch.git
 git push origin master
 ```
 
-2. 修改版
+#### 2. 修改版
 
 ```bash
 git add .
@@ -160,7 +237,7 @@ git commit -m "===message===="
 git push origin master
 ```
 
-3. 获取远程主机的最新版
+#### 3. 获取远程主机的最新版
 
 ```bash
 #fetch：将远程主机的最新内容拉到本地，不进行合并
@@ -170,7 +247,30 @@ git fetch origin master
 git pull origin master
 ```
 
+#### 4. 分支管理
 
+```shell
+git branch #显示当前所有分支，‘*’指向当前分支
+git branch -v #查看看每个分支最后一次提交的版本
+
+#创建分支
+git branch branch_name #创建分支
+git checkout branch_name #切换到branch_name分支
+git checkout -b branch_name #创建并切换到branch_name分支
+
+#合并分支
+git chechout master #先切换到master分支
+git merge branch_name #再合并分支
+#合并冲突
+get branch --no-merged #查看未合并的分支
+
+#删除分支
+git branch -d branch_name
+
+#远程分支
+git push origin linux
+
+```
 
 
 
