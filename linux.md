@@ -1,4 +1,4 @@
-### linux
+## linux
 
 #### 基本命令
 
@@ -62,11 +62,27 @@ grep -i abc test.txt #查找test.txt文件中的“abc”字符串，不区分�
 
  ```
 
+### 网络
+
+#### 抓包tcpdump
+
+```shell
+tcpdump -D #查看当前主机的所有网卡编号和名称
+```
 
 
-#### 进程通信
 
-##### 共享内存
+```shell
+
+```
+
+
+
+
+
+### 进程通信
+
+#### 共享内存
 
 > [mmap映射区和shm共享内存的区别总结](https://blog.csdn.net/hj605635529/article/details/73163513?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param)
 
@@ -166,6 +182,8 @@ mmap, 它把文件内容映射到进程地址空间后，进程可以像访问�
 3. 进程发起对该映射空间的访问，引发缺页异常，实现文件内容到物理内存的拷贝**mmap只是在虚拟内存分配了地址空间，只有在第一次访问虚拟内存的时候才分配物理内存。**
 
 创建新的虚拟内存区域和建立文件磁盘地址和虚拟内存区域映射这两步，没有任何文件拷贝操作。而之后访问数据时发现内存中并无数据而发起的缺页异常过程，可以通过已经建立好的映射关系，只使用一次数据拷贝，就从磁盘中将数据传入内存的用户空间中，供进程使用。
+
+### 调试相关
 
 #### GCC 命令
 
