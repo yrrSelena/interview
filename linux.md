@@ -1,16 +1,11 @@
 ## linux
 
-#### 基本命令
+### 基本命令
 
 ```shell
 # 用户权限设置
 sudo -i #切换到root权限
 exit #回到用户权限
-
-# 文件操作
-rm -f filename #删除文件 (rm: remove)
-rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive 向下递归)
-
 
 #lsof: list open file 查看打开进程的文件，打开文件的进程，进程打开的端口，
 lsof -i|grep rssp
@@ -20,12 +15,125 @@ lsof -p 8080 #通过进程号显示该进程打开的文件
 
 ```
 
-- 目录操作：mkdir rmdir cd
 - 文件操作：ls echo cat rm cp mv
 - 文件内容操作：grep sed awk
 - 网络命令：ipconfig ps netstat
 
 打开系统监视器： gnome-system-monitor
+
+#### 系统状态检测
+
+**1. ifconfig 获取网卡配置与网络状态等信息**
+
+网卡名称、IP地址（inet）、MAC地址等
+
+<img src="linux.assets/image-20200822161548535.png" alt="image-20200822161548535" style="zoom:80%;" />
+
+**2. free 显示当前系统中内存的使用量**
+
+```shell
+#方法一
+cat /proc/meminfo
+
+#方法二
+free #显示当前系统中内存的使用量（包括物理内存、交换内存、内核缓冲区内存）
+free -h #以M、G等形式显示
+```
+
+![image-20200822160604421](linux.assets/image-20200822160604421.png)
+
+
+
+**3.uname 查看系统内核与系统版本等**
+
+```shell
+uname -a #查看当前系统的内核名称、主机名、内核发行版本、节点名、系统时间、硬件名称等
+```
+
+![image-20200822162302853](linux.assets/image-20200822162302853.png)
+
+
+
+#### 文件目录管理
+
+**1.touch创建空白文件**或设置文件的时间
+
+```shell
+touch filename #创建一个名为filename的文件
+```
+
+**2.mkdir创建空白目录(make dir)**（可递归创建）
+
+```shell
+mkdir pathname
+mkdir -p a/b/c #递归创建文件目录
+```
+
+**3.cp复制文件/目录(copy)**
+
+```shell
+cp -p srcfile.log dstfile.log
+#-p 保留原文件属性
+#-r 递归复制（用于目录）
+#-i 若目标文件存在，则询问是否覆盖
+```
+
+**4.mv剪切文件或重命名(move)**
+
+```sh
+mv oldname.log newname.log #在同一目录中对一个文件的剪切操作即为重命名
+```
+
+**5.rm删除文件/目录(remove)**
+
+```shell
+rm filename.log
+rm -f filename.log #f(force)强制删除
+rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive 向下递归)
+```
+
+**6.file查看文件/目录类型**
+
+```shell
+file filename.log
+```
+
+
+
+
+
+### proc（伪文件系统）
+
+存储当前内核运行状态的一系列特殊文件，用户可以根据这些文件查看有关**系统硬件**及当前正在运行**进程**的信息，甚至可以通过文件**改变内核的运行状态**
+
+#### proc目录下常见文件
+
+```shell
+（该目录下文件大多为只读）
+/proc/pid：存储当前正在运行的pid号进程的相关信息
+
+/proc/cpuinfo：记录CPU信息
+
+/proc/meminfo：记录内存信息，查看方式：free 或用文件查看命令，如cat /proc/meminfo
+
+/proc/buddyinfo：用于诊断内存碎片问题的相关信息
+
+/proc/kcore：存储系统使用的物理内存，以ELF core文件格式存储，大小为一直用物理内存RAM+4KB（拥有检查内核数据结构的当前状态，通常由GDB调试工具使用，不能用文件查看命令打开）
+
+/proc/vmstat：记录当前系统虚拟内存的多种统计数据
+
+/proc/sys：与/proc下的其它“只读”文件不同，管理员可以对/proc/sys中的许多文件内容进行修改。写入操作通常为echo DATA > /path/to/filename（一般不能用文本编辑器进行编辑）
+
+可用cat, more, less等命令进行查看
+可读性差的文件使用apm, free, lspci, top查看
+
+```
+
+
+
+
+
+
 
 
 
@@ -66,17 +174,107 @@ grep -i abc test.txt #查找test.txt文件中的“abc”字符串，不区分�
 
 #### 抓包tcpdump
 
-```shell
-tcpdump -D #查看当前主机的所有网卡编号和名称
-```
-
-
+抓包需要管理员权限
 
 ```shell
-
+tcpdump -D #查看当前主机的所有网卡编号和名称（即可抓包的接口）
+# any 特殊接口，可用于抓取所有活动网络接口的数据包
 ```
 
+![image-20200822104449680](linux.assets/image-20200822104449680.png)
 
+```shell
+tcpdump -i 1 -c 10 -A -n -nn port 80 -vvv
+-i #设置抓包端口
+-c #限制抓包数量
+-n #显示IP地址
+-nn #显示端口号
+-v #显示详细信息 -vv更详细 -vvv最详细
+-X / -A #输出包的头部数据，会以16进制(-X)和ASCII(-A)两种方式输出
+-w #将抓包数据输出到文件中（保存为.pcap） -r表示读取该文件
+
+tcpdump src host hostname and port 443
+#src：截取主机发送的数据包 dst：截取发送到主机的数据包
+host #监视指定主机的数据包
+port #限制抓包端口
+#icmp：抓取ping包，tcp：抓取tcp包
+#多条件组合：and,&&：与  or,||：或 not,!：非
+```
+
+#### 包内容分析
+
+1. 数据报被抓取的系统本地时间戳  11:50:21.523716
+2. IP网络层协议类型：IP表示协议为IPv4，IP6表示协议为IPv6
+3. 源ip地址及端口号：192.168.174.132.35948，192.168.174.132表示IP地址，35948表示端口号
+4. 目的地址及端口号：58.205.221.222.80
+5. TCP报文标记段：Flags[S]，[S]表示SYN，[F]表示FIN，[P]表示PUSH（数据推送），[R]表示RST（重置连接），[.]表示ACK，[S.]表示SYN-ACK数据包
+6. 校验码：cksum
+7. 序列号：seq 4285131841
+8. ack值：ack （下图中第二个包的ack为 4285131842 = seq + 1）
+9. 接受窗口大小：win
+10. TCP选项：options，如MSS最大段，
+11. 数据包的有效载荷（字节长度）：length
+
+![image-20200822115254206](linux.assets/image-20200822115254206.png)
+
+```
+#======TCP建立连接阶段======
+# 第一次握手 客户端发送SYN
+11:50:21.523716 IP (tos 0x0, ttl 64, id 13590, offset 0, flags [DF], proto TCP (6), length 60)
+    192.168.174.132.35948 > 58.205.221.222.80: Flags [S], cksum 0x8807 (incorrect -> 0xfe4a), seq 4285131841, win 64240, options [mss 1460,sackOK,TS val 2897191379 ecr 0,nop,wscale 7], length 0
+E..<5.@.@.}.....:....l.P.i.A...................
+............
+# 第二次握手 服务器端发送SYN+ACK
+11:50:21.536625 IP (tos 0x0, ttl 128, id 14154, offset 0, flags [none], proto TCP (6), length 44)
+    58.205.221.222.80 > 192.168.174.132.35948: Flags [S.], cksum 0x6a2e (correct), seq 179644416, ack 4285131842, win 64240, options [mss 1460], length 0
+E..,7J....{.:........P.l
+.(..i.B`...j.........
+# 第三次握手 客户端发送ACK
+11:50:21.536646 IP (tos 0x0, ttl 64, id 13591, offset 0, flags [DF], proto TCP (6), length 40)
+    192.168.174.132.35948 > 58.205.221.222.80: Flags [.], cksum 0x87f3 (incorrect -> 0x81eb), seq 1, ack 1, win 64240, length 0
+E..(5.@.@.}.....:....l.P.i.B
+.(.P.......
+
+#======数据传输阶段======
+# 客户端传输数据
+11:50:21.539773 IP (tos 0x0, ttl 64, id 13592, offset 0, flags [DF], proto TCP (6), length 486)
+    192.168.174.132.35948 > 58.205.221.222.80: Flags [P.], cksum 0x89b1 (incorrect -> 0x85fa), seq 1:447, ack 1, win 64240, length 446: HTTP, length: 446
+    POST /gsorganizationvalsha2g2 HTTP/1.1
+	Host: ocsp2.globalsign.com
+	User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0
+	Accept: */*
+	Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+	Accept-Encoding: gzip, deflate
+	Content-Type: application/ocsp-request
+	Content-Length: 79
+	Connection: keep-alive
+
+#服务器端返回ACK数据包
+11:50:21.557136 IP (tos 0x0, ttl 64, id 13593, offset 0, flags [DF], proto TCP (6), length 40)
+    192.168.174.132.35948 > 58.205.221.222.80: Flags [.], cksum 0x87f3 (incorrect -> 0x802d), seq 447, ack 1395, win 62846, length 0
+	HTTP/1.1 200 OK
+	Server: Tengine
+	Content-Type: application/ocsp-response
+	Content-Length: 1574
+	Connection: keep-alive
+	Date: Sat, 22 Aug 2020 02:18:24 GMT
+	Expires: Tue, 25 Aug 2020 23:44:30 GMT
+	X-Powered-By: Undertow/1
+	ETag: "79628fb6651266ef2faaf9cfd0076ef2a399a42c"
+	Last-Modified: Fri, 21 Aug 2020 23:44:30 GMT
+	Cache-Control: public, no-transform, must-revalidate, s-maxage=3600
+	Ali-Swift-Global-Savetime: 1598062704
+	Via: cache50.l2cn2630[0,200-0,H], cache59.l2cn2630[0,0], cache5.cn60[0,200-0,H], cache5.cn60[1,0]
+	Age: 5517
+	X-Cache: HIT TCP_MEM_HIT dirn:4:344332155
+	X-Swift-SaveTime: Sat, 22 Aug 2020 03:08:45 GMT
+	X-Swift-CacheTime: 3600
+	Timing-Allow-Origin: *
+	EagleId: 3acdddcd15980682215333713e
+
+11:50:21.558117 IP (tos 0x0, ttl 128, id 14158, offset 0, flags [none], proto TCP (6), length 938)
+    58.205.221.222.80 > 192.168.174.132.35948: Flags [P.], cksum 0x16ff (correct), seq 1395:2293, ack 447, win 64240, length 898: HTTP
+```
 
 
 
@@ -327,78 +525,3 @@ Ubuntu下不支持yum命令，应替换为`apt-get install xxx`
 
 
 
-### git
-
-#### 1. 创建初版
-
-```bash
-#在要git的文件夹下打开git Bash
-git init
-git add .
-git commit -m "===message===="
-#要在github上创建相应的repository
-git remote add origin https://github.com/yrrSelena/MedInfoSearch.git
-git push origin master
-```
-
-#### 2. 修改版
-
-```bash
-git add .
-git commit -m "===message===="
-git push origin master
-```
-
-#### 3. 获取远程主机的最新版
-
-```bash
-git fetch origin master #fetch：将远程主机的最新内容拉到本地，不进行合并
-git log -p master..origin/master #比较本地的master分支和origin/master分支的差别
-git merge origin/master #合并内容到本地
-
-#pull：将远程主机的master分支最新内容拉下来后与当前本地分支直接合并 fetch+merge
-git pull origin master
-```
-
-#### 4. 分支管理
-
-```shell
-git branch #显示当前所有分支，‘*’指向当前分支
-git branch -v #查看看每个分支最后一次提交的版本
-
-#创建分支
-git branch branch_name #创建分支
-git checkout branch_name #切换到branch_name分支
-git checkout -b branch_name #创建并切换到branch_name分支
-
-#合并分支
-git chechout master #先切换到master分支
-git merge branch_name #再合并分支
-#合并冲突
-get branch --no-merged #查看未合并的分支
-
-#删除分支
-git branch -d branch_name
-
-#远程分支
-git push origin linux
-```
-
-#### 5. 远程仓库
-
-```shell
-git remote -v #查看远程仓库详细信息，可以看到仓库名称
-git remote rm origin #删除origin仓库
-git remote add origin https://github.com/yrrSelena/MedInfoSearch.git #重新添加远程仓库地址
-git push -u origin master #提交到远程仓库的master主干
-```
-
-
-
-#### 常见问题
-
-**Git 提示fatal: remote origin already exists** 
-
-删除远程 Git 仓库
-
-`git remote rm origin`
