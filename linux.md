@@ -10,7 +10,57 @@ exit #回到用户权限
 # 文件操作
 rm -f filename #删除文件 (rm: remove)
 rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive 向下递归)
+
+
+#lsof: list open file 查看打开进程的文件，打开文件的进程，进程打开的端口，
+lsof -i|grep rssp
+lsof -u ^root #-u:user 列出某个用户打开的文件信息
+lsof -i tcp #列出tcp/udp的连接情况
+lsof -p 8080 #通过进程号显示该进程打开的文件
+
 ```
+
+- 目录操作：mkdir rmdir cd
+- 文件操作：ls echo cat rm cp mv
+- 文件内容操作：grep sed awk
+- 网络命令：ipconfig ps netstat
+
+打开系统监视器： gnome-system-monitor
+
+
+
+##### ps：查看进程命令
+
+ ```shell
+#ps命令（Process Status）查看进程命令
+ps a #显示现行终端机下的所有程序，包括其他用户的程序。
+ps -aux,然后再利用一个管道符号导向到grep去查找特定的进程,然后再对特定的进程进行操作
+
+ps -aux |more #可以用 | 管道和 more 连接起来分页查看。
+
+#把所有进程显示出来，并输出到ps001.txt文件，然后再通过more 来分页查看
+ps -aux > ps001.txt
+more ps001.txt
+
+#查看进程id
+ps -ef | grep nginx
+#ps -ef #表示显示所有进程的消息
+#command1 | command2 # |:管道命令 将command1执行的结果交给command2处理
+#grep nginx #在所有进程的消息查询名字为nginx的进程
+
+#根据pid查看占用端口
+lsof -i | grep pid
+netstat -nap | grep pid
+
+#根据端口号查看对应的进程名
+lsof -i : port
+netstat -nap | grep port
+
+#grep:Linux下的文本过滤工具
+grep -i abc test.txt #查找test.txt文件中的“abc”字符串，不区分大小写
+
+
+ ```
 
 
 
@@ -18,13 +68,39 @@ rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive
 
 ##### 共享内存
 
-System V
+> [mmap映射区和shm共享内存的区别总结](https://blog.csdn.net/hj605635529/article/details/73163513?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param)
+
+两个进程的一块虚拟地址空间映射到了同一块物理内存上
+
+- Linux 实现共享内存的方式
+
+1)mmap内存共享映射, 2) System V 3) POSIX
+
+（SystemV和POSIX底层都是基于内存文件系统**tmpfs**实现，主要在接口设计上有差别，POSIX遵循了Linux系统一切皆文件的理念）
+
+- 共享内存相关文件
+
+ /proc/sys/kernel/shmmni：限制整个系统可创建共享内存段个数。 
+
+ /proc/sys/kernel/shmall： 限制系统用在共享内存上的内存的页数。  
+
+ /proc/sys/kernel/shmmax：限制一个共享内存段的最大长度，字节为单位。
+
+- System V 共享内存
 
 > https://blog.csdn.net/RayCongLiang/article/details/100027643
 
 ```c
 #include <sys/ipc.h>
 #include <sys/shm.h>
+/* 0.ftok  系统建立IPC通讯（如消息队列、共享内存时）必须指定一个ID值。通常情况下，该id值通过ftok函数得到
+参数：
+pathname：一个指定的文件路径
+proj_id：对应项目的id
+通过返回的key_t类型让所有的进程都唯一映射到对应内存空间，失败返回-1
+*/
+key_t ftok (const char *pathname, int proj_id);
+
 /*1.shmget 创建共享内存
 参数：
 key:段名，可以是自定义的整数，或者用字符串通过ftok() 生成（但每次生成的值可能不一样）
@@ -60,7 +136,7 @@ buf:指向一个保存共享内存的模式状态和访问权限的数据结构
 int shmctl(int shmid, int cmd, struct shmid_ds *buf)
 ```
 
-
+- 查看内存信息
 
 ```shell
 ~$ ipcs #显示进程通信消息（共享内存、消息队列、信号量）
@@ -72,6 +148,24 @@ int shmctl(int shmid, int cmd, struct shmid_ds *buf)
 
 
 
+
+mmap（内存映射函数）
+
+普通文件的读写
+
+进程调用**read**或**write**<系统调用>后会陷入内核，进入系统调用，内核开始读写文件。对于读文件，内核首先把数据从磁盘copy到内核缓冲区（页缓冲）中，然后进程从内核态回到用户态，内核把读入内核内存的数据copy到进程的用户态内存空间。（实际上对同一份文件内容进行2次拷贝，磁盘->内核空间->用户空间）
+
+把内核中特定部分的内存空间映射到用户级程序的内存空间（用户空间和内核空间共享一块相同的内存）
+
+mmap, 它把文件内容映射到进程地址空间后，进程可以像访问内存的方式对文件进行访问，不需要其他系统调用(read,write)去操作。
+
+> [mmap](https://blog.csdn.net/Holy_666/article/details/86532671)
+
+1. 进程在用户空间调用库函数mmap，进程启动映射过程，并在虚拟地址空间中为映射创建虚拟映射区域
+2. 调用内核空间的mmap函数，实现文件物理地址和进程虚拟地址的一一映射关系
+3. 进程发起对该映射空间的访问，引发缺页异常，实现文件内容到物理内存的拷贝**mmap只是在虚拟内存分配了地址空间，只有在第一次访问虚拟内存的时候才分配物理内存。**
+
+创建新的虚拟内存区域和建立文件磁盘地址和虚拟内存区域映射这两步，没有任何文件拷贝操作。而之后访问数据时发现内存中并无数据而发起的缺页异常过程，可以通过已经建立好的映射关系，只使用一次数据拷贝，就从磁盘中将数据传入内存的用户空间中，供进程使用。
 
 #### GCC 命令
 
@@ -93,7 +187,11 @@ gcc main.c -o main
 
 
 
-> https://blog.csdn.net/MOU_IT/article/details/88903668
+#### Core dump
+
+> [详解coredump](https://blog.csdn.net/MOU_IT/article/details/88903668)
+
+##### core dump配置
 
 产生core dump核心转储文件
 
@@ -107,21 +205,17 @@ gcc main.c -o main
 
 
 
+##### Core dump+gdb调试
+
 ```shell
 #gcc编译成可执行文件后，运行该文件
-~$ gcc -o main main.c #一般会加-g用来添加调试信息
+~$ gcc -g -o main main.c #一般会加-g用来添加调试信息
 ~$./main #出现错误，相应文件夹下会产生core文件
 ~$ gdb main core #进入gdb调试，可以看到出错的代码位置及原因
 (gdb) bt #进入gdb后，输入bt查看进程结束的地方
 ```
 
 <img src="linux.assets/image-20200818155709092.png" alt="image-20200818155709092" style="zoom:80%;" />
-
-##### 常见错误
-
-段错误
-
-
 
 
 
@@ -240,8 +334,9 @@ git push origin master
 #### 3. 获取远程主机的最新版
 
 ```bash
-#fetch：将远程主机的最新内容拉到本地，不进行合并
-git fetch origin master
+git fetch origin master #fetch：将远程主机的最新内容拉到本地，不进行合并
+git log -p master..origin/master #比较本地的master分支和origin/master分支的差别
+git merge origin/master #合并内容到本地
 
 #pull：将远程主机的master分支最新内容拉下来后与当前本地分支直接合并 fetch+merge
 git pull origin master
@@ -269,7 +364,15 @@ git branch -d branch_name
 
 #远程分支
 git push origin linux
+```
 
+#### 5. 远程仓库
+
+```shell
+git remote -v #查看远程仓库详细信息，可以看到仓库名称
+git remote rm origin #删除origin仓库
+git remote add origin https://github.com/yrrSelena/MedInfoSearch.git #重新添加远程仓库地址
+git push -u origin master #提交到远程仓库的master主干
 ```
 
 
