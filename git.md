@@ -68,6 +68,26 @@ git push -u origin master #提交到远程仓库的master主干
 
 #### 常见问题
 
+mac系统安装最新版git
+
+```shell
+brew install git #安装最新版git
+which git #查看git指向
+git --version #显示版本信息
+
+#如果一直显示旧的版本，需要进行路径配置
+echo $PATH #查看路径
+vim ~/.bash_profile #在用户级编辑环境变量
+export PATH=/usr/local/Cellar/git/2.28.0/bin:$PATH  #添加环境变量
+source ~/.bash_profile #执行source使环境变量生效
+
+git --version #显示最新版本
+```
+
+
+
+
+
 Q: Git 提示fatal: remote origin already exists
 
 删除远程 Git 仓库

@@ -445,7 +445,7 @@ gcc -g testGDB.c -o testGDB
 g++ -g testGDB.cpp -o testGDB
 g++ -g -std=c++11 testGDB testGDB.cpp 
 
-#==== 调试未运行的程序 ====
+#==== 1.调试未运行的程序 ====
 #调试启动无参程序
 gdb testGDB 
 
@@ -457,13 +457,25 @@ run arg_hello arg_world
 set args arg_hello arg_world
 run
 
-#==== 调试已运行的程序 ====
+#==== 2.调试正在运行的程序 ====
+pidof testGDB #通过文件名找到该程序运行对应的进程号
 ps -ef|grep 进程名
+#调用GDB对该程序进行调试
+gdb attach PID  #方法1
+gdb filename PID#方法2
+gdb -p PID      #方法3
+
+#==== 3.调试执行异常奔溃的程序 ====
+#常见bug：内存访问越界（数组下标月结、输出字符串是没有以\0结束等）、非法使用空指针等
+#采用核心转储（core dump），将发生崩溃时的内存数据、调用堆栈情况等信息自动记录存储到core文件
+gdb testGDB core
 ```
 
 
 
 > [Linux下GDB调试指令](https://zhuanlan.zhihu.com/p/71519244)
+>
+> [GDB调试教程](http://c.biancheng.net/gdb/)
 
 ```shell
 #运行指令
@@ -488,12 +500,16 @@ p/print 表达式：显示程序中任何有效的表达式
 p ptr：若ptr为指针，则打印指针地址
 p *ptr：通过解引用打印指针指向的内容
 p *ptr@10：打印指针所指数组的多个值
+
+#监控变量值的变化
 watch 表达式：设置一个监视点
 info locals：显示当前堆栈页的所有变量
+
 #查询运行信息
 where/bt：当前运行的堆栈列表
 bt backtrace：显示当前调用堆栈
 info program：查看程序是否在运行，进程号，被暂停的原因等
+
 ```
 
 
