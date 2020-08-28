@@ -1,18 +1,72 @@
 ## linux
 
+linux文件系统存储单位是块，每个文件对应一个inode（保存了一些文件信息，通过inode找到对应的文件）
+
+硬链接：类似于浅拷贝、共享内存（创建一个硬链接，指向磁盘中某个节点，硬链接计数+1）【只有文件才能创建硬链接，目录不能】
+
+软连接：相当于快捷方式
+
+#### 快捷键
+
+光标移动：向左ctrl+B(backward) 向右ctrl+F(forward) 最前面ctrl+A  到最后面ctrl+E
+
+tab：目录补全：tab 1次；显示当前目录下的所有文件：tab 2次
+
+清屏：ctrl+L
+
+#### 目录结构：树状结构
+
+##### 常用目录
+
+/bin: bin(binary) 存放经常使用的命令
+
+/boot: 存放启动Linux时使用的一些核心文件（连接文件及镜像文件）
+
+/dev: device，存放linux的外部设备，把硬件外设保存成文件
+
+/etc: 操作系统需要用到的**配置文件**
+
+/home: 用户的主目录，每个用户有一个自己的目录
+
+/lib: 基本的动态链接共享库，类似于windows下的DLL文件，几乎所有应用程序都要用到这些共享库
+
+/mnt: 
+
+/root:
+
+/sbin: super user
+
+/usr: user software resource存放应用程序和文件，与windows下的program files类似
+
+##### 文件颜色
+
+白：普通文件；蓝：目录；绿：可执行文件；青：链接文件；黄：设备文件（块、字符、管道）
+
+##### 查看目录
+
+```shell
+#方法一 ls
+ls -a #显示隐藏文件，以.开头
+ls -l #显示详细信息
+
+#所有者、同组用户、其他人rwx
+
+#方法二 tree （需要下载）
+```
+
+
+
+
+
 ### 基本命令
 
 ```shell
 # 用户权限设置
+sudo su #切换到root权限
 sudo -i #切换到root权限
 exit #回到用户权限
 
-#lsof: list open file 查看打开进程的文件，打开文件的进程，进程打开的端口，
-lsof -i|grep rssp
-lsof -u ^root #-u:user 列出某个用户打开的文件信息
-lsof -i tcp #列出tcp/udp的连接情况
-lsof -p 8080 #通过进程号显示该进程打开的文件
-
+pwd #显示当前路径
 ```
 
 - 文件操作：ls echo cat rm cp mv
@@ -23,13 +77,9 @@ lsof -p 8080 #通过进程号显示该进程打开的文件
 
 #### 系统状态检测
 
-**1. ifconfig 获取网卡配置与网络状态等信息**
 
-网卡名称、IP地址（inet）、MAC地址等
 
-<img src="linux.assets/image-20200822161548535.png" alt="image-20200822161548535" style="zoom:80%;" />
-
-**2. free 显示当前系统中内存的使用量**
+##### 2. free 显示当前系统中内存的使用量
 
 ```shell
 #方法一
@@ -37,14 +87,24 @@ cat /proc/meminfo
 
 #方法二
 free #显示当前系统中内存的使用量（包括物理内存、交换内存、内核缓冲区内存）
-free -h #以M、G等形式显示
+free -h #以更直观的形式显示
+free -m #以MB为单位进行查看
 ```
 
 ![image-20200822160604421](linux.assets/image-20200822160604421.png)
 
 
 
-**3.uname 查看系统内核与系统版本等**
+##### 3.df查看磁盘空间
+
+```shell
+#查看磁盘空间
+df -h
+```
+
+
+
+##### 4.uname 查看系统内核与系统版本等
 
 ```shell
 uname -a #查看当前系统的内核名称、主机名、内核发行版本、节点名、系统时间、硬件名称等
@@ -54,40 +114,46 @@ uname -a #查看当前系统的内核名称、主机名、内核发行版本、�
 
 
 
+
+
 #### 文件目录管理
 
-**1.touch创建空白文件**或设置文件的时间
+##### 1.touch创建空白文件
+
+或设置文件的时间
 
 ```shell
 touch filename #创建一个名为filename的文件
 ```
 
-**2.mkdir创建空白目录(make dir)**（可递归创建）
+##### 2.mkdir创建空白目录
 
 ```shell
-mkdir pathname
-mkdir -p a/b/c #递归创建文件目录
+mkdir pathname  #mkdir(make directory)
+mkdir -p a/b/c  #递归创建文件目录
 ```
 
-**3.cp复制文件/目录(copy)**
+##### 3.cp复制文件/目录
+
+(copy)
 
 ```shell
-cp -p srcfile.log dstfile.log
+cp -p srcfile.log dstfile.log #cp(copy)
 #-p 保留原文件属性
 #-r 递归复制（用于目录）
 #-i 若目标文件存在，则询问是否覆盖
 ```
 
-**4.mv剪切文件或重命名(move)**
+##### 4.mv剪切文件或重命名
 
 ```sh
-mv oldname.log newname.log #在同一目录中对一个文件的剪切操作即为重命名
+mv oldname.log newname.log #mv(move)在同一目录中对一个文件的剪切操作即为重命名
 ```
 
-**5.rm删除文件/目录(remove)**
+##### 5.rm删除文件/目录
 
 ```shell
-rm filename.log
+rm filename.log  #rm(remove)
 rm -f filename.log #f(force)强制删除
 rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive 向下递归)
 ```
@@ -99,6 +165,196 @@ file filename.log
 ```
 
 
+
+#### 进程相关
+
+##### 1.ps查看进程
+
+```shell
+ps [-aef] [-p pid] [-u userid]
+#-a:(all) 显示任何用户标识和终端相关的进程
+#-ax:显示没有控制终端的进程
+#-u:根据用户过滤进程
+#-ef:显示所有进程信息
+
+ps -ef | grep bash #结合grep查找特定进程
+
+#通过CPU和内存使用情况过滤
+ps -aux --sort -pcpu | less #根据CPU使用来升序排序
+ps -aux --sort -pmem | head -n 10 #根据内存使用升序排序，并显示前10个结果
+ps -aux --sort -pcpu,+pmem | head -n 10 #对进程先按CPU升序，再内存降序排序，显示前10个
+
+ps -C main #-C:根据进程名查看进程
+ps -L pid  #-L:根据进程号显示线程信息 LWP(light weight process) 轻量级进程（线程）
+```
+
+![image-20200827155219933](linux.assets/image-20200827155219933.png)
+
+
+
+###### 1-1 实时监控进程状态
+
+```shell
+wacth -n 1 'ps -aux --sort -pmem, -pcpu'  #-n:每n秒刷新一次
+#相对于top，能够自定义显示的字段
+```
+
+
+
+
+
+##### 2.结合 | 管道
+
+```shell
+指令1 | 指令2 #指令1的输出作为指令2的输入，指令2处理完毕后将信息输出到屏幕
+ps aux | grep bash #查询是否有bash<终端>相关的进程（最后一个是grep进程）
+ps -eo pid,ppid,lwp,nlwp,psr,args -L | grep process_name #-o表示输出形式
+#ppid:父进程id，lwp:线程id，nlwp:线程数
+```
+
+![image-20200825212335618](linux.assets/image-20200825212335618.png)
+
+![image-20200827155941773](linux.assets/image-20200827155941773.png)
+
+##### 3.kill杀死进程
+
+```shell
+kill -l #显示所有信号
+kill -9 pid
+kill -SIGKILL pid
+```
+
+![image-20200825212732438](linux.assets/image-20200825212732438.png)
+
+##### 4.env查看进程的环境变量
+
+```shell
+添加环境变量 key=value;value;value
+```
+
+![image-20200825213111126](linux.assets/image-20200825213111126.png)
+
+##### 5.top任务管理器
+
+```shell
+top -Hp pid #显示
+```
+
+
+
+![image-20200827160605942](linux.assets/image-20200827160605942.png)
+
+##### 6.lsof 列举系统中已经打开的文件
+
+```shell
+#lsof: list open files 查看打开进程的文件，打开文件的进程，进程打开的端口，
+
+#1. -c:(command)根据进程名查看打开的文件
+lsof -c filename   
+#2. -p:(port)根据进程号查看
+lsof -p 8080        
+#3. -i:通过监听指定的协议、端和主机等信息，显示符合条件的进程信息
+lsof -i|grep rssp  
+lsof -i tcp #列出tcp/udp的连接情况
+#4. -u:(user)列出某个用户打开的文件信息
+lsof -u ^root 
+lsof -u selena
+#5. -U显示所有socket文件
+lsof -U             
+```
+
+
+
+###### 6-1 显示使用文件的进程
+
+```shell
+lsof filename
+```
+
+
+
+###### 6-2 查看进程打开的文件
+
+```shell
+#1.根据进程名显示
+lsof -c main
+
+#2.根据进程号查看
+ps -ef | grep main #根据进程名找到对应的进程id
+lsof -p pid   #根据进程号查看该进程打开的文件
+
+#3.查看进程打开的文件句柄数
+ulimit -n #显示系统默认的最大文件句柄数
+lsof -n | awk '{print $2}'| sort |uniq -c | sort -nr | more #查看当前进程打开了的句柄数
+```
+
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+int main()
+{
+    FILE *fp = fopen("file", "w");
+    if(fp == NULL){
+        return 1;
+    }
+    while(1){
+        sleep(1);
+    }
+    return 0;
+}
+```
+
+![image-20200827143942595](linux.assets/image-20200827143942595.png)
+
+```shell
+COMMAND：表示进程名
+PID：进程号
+USER：进程的所有者
+FD：文件描述符（0标准输出；1标准输入；2标准错误；u文件被打开并处于读取、写入模式；r文件被打开并处于只读模式；w文件被打开并处于写入模式）
+TYPE：文件类型（REG表示普通文件regular）
+DEVICE：指定磁盘的名称
+SIZE/OFF：文件大小
+NODE：索引节点
+NAME：文件名称
+```
+
+
+
+
+
+###### 6-3 监听指定协议、端口、主机等信息，显示进程信息
+
+```shell
+lsof -i [4/6] [protocol] [@8hostname] [:service|port]
+#4/6: 4:IPv4,6:IPv6
+#protocol: TCP / UDP
+#hostname: 主机名称/IP地址
+#service：进程服务名，如NFS、SSH、FTP等
+#port：端口号
+lsof -i #查看所有进程
+lsof -i tcp #显示所有tcp网络连接的进程
+lsof -i :22 #显示端口为22的进程信息
+```
+
+
+
+#### 网络相关
+
+##### 1.ifconfig 获取网卡配置与网络状态等信息
+
+网卡名称、IP地址（inet）、MAC地址等
+
+<img src="linux.assets/image-20200822161548535.png" alt="image-20200822161548535" style="zoom:80%;" />
+
+lo：回环地址
+
+##### 2.ping
+
+```shell
+ping www.baidu.com
+nslookup www.baidu.com
+```
 
 
 
@@ -385,14 +641,26 @@ mmap, 它把文件内容映射到进程地址空间后，进程可以像访问�
 
 #### GCC 命令
 
-```shell
-gcc #不加参数可以直接编译成可执行文件
-gcc main.c #默认生成a.out可执行文件
-gcc main.c -o main.exe #可以通过-o更改生成文件的名字
+基本流程
 
-gcc -o <file> #(out)将输出放入<文件>
-gcc -c main.c #(compile)编译和汇编，但不链接，生成main.o二进制目标文件
-gcc -g main.c -o main#添加gdb调试选项
+```shell
+gcc -E hello.c -o hello.i #预处理：头文件展开、宏替换、去掉注释
+gcc -S hello.i -o hello.s #编译器：C文件转化为汇编文件
+gcc -c hello.s -o hello.o #汇编器：汇编文件转化为二进制文件
+gcc hello.o -o hello      #链接器：将函数库中相应的代码组合到目标文件中，得到可执行文件
+```
+
+
+
+```shell
+#gcc不加参数可以直接编译成可执行文件
+gcc main.c #默认生成a.out可执行文件
+gcc main.c -o main #可以通过-o更改生成文件的名字
+
+gcc -o <file>            #-o(out)将输出放入<文件>
+gcc -c main.c            #-c(compile)编译和汇编，但不链接，生成main.o二进制目标文件
+gcc -g main.c -o main    #-g添加gdb调试选项
+gcc -I ./include -o main #-I指定头文件目录
 
 gcc main.o #自动链接上一步生成的main.o来生成最终可执行文件a.out
 
