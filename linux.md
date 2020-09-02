@@ -356,6 +356,23 @@ ping www.baidu.com
 nslookup www.baidu.com
 ```
 
+##### 3.netstat 显示网络相关信息
+
+```shell
+-t 显示TCP协议的连接情况
+-u 显示UDP协议的连接情况。
+-v 显示正在进行的工作。
+-p 显示指定协议信息。
+
+netstat -a #列出所有端口
+netstat -at #列出所有 tcp 端口 
+
+netstat -nat |awk '{print $6}' #TCP各种状态列表
+netstat -nat |awk '{print $6}'|sort|uniq -c|sort -rn #先把状态全都取出来,然后使用uniq -c统计，之后再进行排序
+```
+
+
+
 
 
 ### proc（伪文件系统）
