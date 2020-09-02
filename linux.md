@@ -687,6 +687,18 @@ gcc main.c -o main
 ~$ ulimit -c #ulimit生成的core文件大小不受限制
 ```
 
+##### 产生coredump的原因
+
+1. 内存访问越界
+2. 非法指针
+3. 堆栈溢出
+4. 多线程程序使用了线程不安全的函数
+5. 多线程读写数据未加锁保护
+
+
+
+1. 段错误（segmentfault）
+
 
 
 ##### Core dump+gdb调试
@@ -706,6 +718,8 @@ gcc main.c -o main
 #### GDB调试
 
 [GDB 调试指南](https://www.yanbinghu.com/2019/04/20/41283.html)
+
+[GDB调试命令](https://darkdust.net/files/GDB Cheat Sheet.pdf)
 
 ```shell
 #在编译时增加-g参数，保留调试信息
@@ -782,7 +796,11 @@ info program：查看程序是否在运行，进程号，被暂停的原因等
 
 
 
+#### 内存泄漏
 
+top 指令。 在Linux或者mac上面可以快速定位泄漏的程序和程度
+
+Valgrind
 
 
 

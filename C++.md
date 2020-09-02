@@ -1165,6 +1165,27 @@ java编译成.class文件（但不是机器可识别的语言），需要jvm解�
 
 [大小端](https://www.jianshu.com/p/ca53bbed2495)
 
+```cpp
+//方式一
+void test1(){
+  unsigned int x = 0x12345678;
+  char *c = (char*)&x;
+  if(*c == 0x78) cout<<"little endian"<<endl;
+  else cout<<"big endian"<<endl;
+}
+//方式二、union
+union U{
+    char c;
+    int num;
+};
+void test2(){
+  U u;
+  u.num = 1;
+  if(u.c == 1) cout<<"little endian"<<endl;
+  else cout<<"big endian"<<endl;
+}
+```
+
 
 
 #### 进程栈初始化
