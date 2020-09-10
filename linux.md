@@ -58,7 +58,16 @@ ls -l #显示详细信息
 #方法二 tree （需要下载）
 ```
 
+判断一个命令是否执行成功
 
+```shell
+if [ $? -ne 0 ];then
+上一命令执行失败时的操作
+
+else
+上一命令执行成功时的操作
+fi
+```
 
 
 
@@ -162,10 +171,37 @@ rm -f filename.log #f(force)强制删除
 rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive 向下递归)
 ```
 
-**6.file查看文件/目录类型**
+##### 6.file查看文件/目录类型
 
 ```shell
 file filename.log
+```
+
+##### 7.find\locate查找文件
+
+```shell
+#find path -name filename 
+find /var -name test.cpp
+#locate需要提前安装
+locate test
+```
+
+##### 8.文件权限
+
+```shell
+ls -l path #查看文件权限
+#修改权限
+chmod 700 file #只有拥有者可读可写可执行
+chmod o w file
+u:user, g:group, o:other, a:所有人
+r:read, w:write, x:可执行, -:删除权限
+
+rwx:7, rw:6, rx:5
+-rwxrwx---
+1. 文件类型:-:普通文件,d:文件夹(directory),l:链接文件(类似于快捷方式),s:套接字文件(socket)
+2-4:拥有者权限设置
+5-7:群组
+8-10:其他
 ```
 
 
@@ -199,7 +235,7 @@ ps -L pid  #-L:根据进程号显示线程信息 LWP(light weight process) 轻�
 ###### 1-1 实时监控进程状态
 
 ```shell
-wacth -n 1 'ps -aux --sort -pmem, -pcpu'  #-n:每n秒刷新一次
+watch -n 1 'ps -aux --sort -pmem, -pcpu'  #-n:每n秒刷新一次
 #相对于top，能够自定义显示的字段
 ```
 
@@ -367,6 +403,8 @@ nslookup www.baidu.com
 -u 显示UDP协议的连接情况。
 -v 显示正在进行的工作。
 -p 显示指定协议信息。
+-n 打印IP地址
+-i 打印接口信息
 
 netstat -a #列出所有端口
 netstat -at #列出所有 tcp 端口 
