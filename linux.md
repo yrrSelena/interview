@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 ## linux
 
 linux文件系统存储单位是块，每个文件对应一个inode（保存了一些文件信息，通过inode找到对应的文件）
@@ -54,7 +58,16 @@ ls -l #显示详细信息
 #方法二 tree （需要下载）
 ```
 
+判断一个命令是否执行成功
 
+```shell
+if [ $? -ne 0 ];then
+上一命令执行失败时的操作
+
+else
+上一命令执行成功时的操作
+fi
+```
 
 
 
@@ -158,10 +171,37 @@ rm -f filename.log #f(force)强制删除
 rm -rf filepath #删除目录及其以下的所有文件/文件夹 (-r:recursive 向下递归)
 ```
 
-**6.file查看文件/目录类型**
+##### 6.file查看文件/目录类型
 
 ```shell
 file filename.log
+```
+
+##### 7.find\locate查找文件
+
+```shell
+#find path -name filename 
+find /var -name test.cpp
+#locate需要提前安装
+locate test
+```
+
+##### 8.文件权限
+
+```shell
+ls -l path #查看文件权限
+#修改权限
+chmod 700 file #只有拥有者可读可写可执行
+chmod o w file
+u:user, g:group, o:other, a:所有人
+r:read, w:write, x:可执行, -:删除权限
+
+rwx:7, rw:6, rx:5
+-rwxrwx---
+1. 文件类型:-:普通文件,d:文件夹(directory),l:链接文件(类似于快捷方式),s:套接字文件(socket)
+2-4:拥有者权限设置
+5-7:群组
+8-10:其他
 ```
 
 
@@ -195,7 +235,7 @@ ps -L pid  #-L:根据进程号显示线程信息 LWP(light weight process) 轻�
 ###### 1-1 实时监控进程状态
 
 ```shell
-wacth -n 1 'ps -aux --sort -pmem, -pcpu'  #-n:每n秒刷新一次
+watch -n 1 'ps -aux --sort -pmem, -pcpu'  #-n:每n秒刷新一次
 #相对于top，能够自定义显示的字段
 ```
 
@@ -355,6 +395,25 @@ lo：回环地址
 ping www.baidu.com
 nslookup www.baidu.com
 ```
+
+##### 3.netstat 显示网络相关信息
+
+```shell
+-t 显示TCP协议的连接情况
+-u 显示UDP协议的连接情况。
+-v 显示正在进行的工作。
+-p 显示指定协议信息。
+-n 打印IP地址
+-i 打印接口信息
+
+netstat -a #列出所有端口
+netstat -at #列出所有 tcp 端口 
+
+netstat -nat |awk '{print $6}' #TCP各种状态列表
+netstat -nat |awk '{print $6}'|sort|uniq -c|sort -rn #先把状态全都取出来,然后使用uniq -c统计，之后再进行排序
+```
+
+
 
 
 
@@ -699,6 +758,18 @@ gcc main.c -o main
 ~$ ulimit -c #ulimit生成的core文件大小不受限制
 ```
 
+##### 产生coredump的原因
+
+1. 内存访问越界
+2. 非法指针
+3. 堆栈溢出
+4. 多线程程序使用了线程不安全的函数
+5. 多线程读写数据未加锁保护
+
+
+
+1. 段错误（segmentfault）
+
 
 
 ##### Core dump+gdb调试
@@ -718,6 +789,8 @@ gcc main.c -o main
 #### GDB调试
 
 [GDB 调试指南](https://www.yanbinghu.com/2019/04/20/41283.html)
+
+[GDB调试命令](https://darkdust.net/files/GDB Cheat Sheet.pdf)
 
 ```shell
 #在编译时增加-g参数，保留调试信息
@@ -794,7 +867,11 @@ info program：查看程序是否在运行，进程号，被暂停的原因等
 
 
 
+#### 内存泄漏
 
+top 指令。 在Linux或者mac上面可以快速定位泄漏的程序和程度
+
+Valgrind
 
 
 
