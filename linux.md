@@ -534,6 +534,18 @@ E..(5.@.@.}.....:....l.P.i.B
 
 
 
+
+
+#### wireshark
+
+[安装](https://blog.csdn.net/sheen_zhuang/article/details/80725486)
+
+![image-20200901093742810](linux.assets/image-20200901093742810.png)
+
+抓包
+
+![TCP_3handshake1_SYN](linux.assets/tcp_3handshake1.PNG)
+
 ### 进程通信
 
 #### 共享内存
